@@ -1,0 +1,104 @@
+package com.app.confeitaria.docelivery.controller;
+
+import com.app.confeitaria.docelivery.dto.PedidoDTO;
+import com.app.confeitaria.docelivery.model.entity.Pedido;
+import com.app.confeitaria.docelivery.service.PedidoService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/pedidos")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5175"})
+public class PedidoController {
+
+    private final PedidoService pedidoService;
+
+    public PedidoController(PedidoService pedidoService) {
+        this.pedidoService = pedidoService;
+    }
+
+    /**
+     * CLIENTE: Realiza um novo pedido.
+     * Retorna o Pedido criado.
+     */
+    @PostMapping
+    public ResponseEntity<Pedido> create(@RequestBody Pedido pedido) {
+        Pedido novoPedido = pedidoService.realizarPedido(pedido);
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoPedido);
+    }
+
+    /**
+     * CONFEITEIRO: Lista pedidos ativos (Fila de Trabalho).
+     * CORRIGIDO: Removida a chamada de atualização de status e utilizada apenas a conversão para DTO limpo.
+     */
+    @GetMapping("/confeiteiro/{id}/fila")
+    public ResponseEntity<List<PedidoDTO>> getFilaTrabalho(@PathVariable Long id) {
+        List<String> statusAtivos = Arrays.asList("NOVO", "PREPARANDO");
+        List<Pedido> pedidos = pedidoService.buscarFilaConfeiteiro(id, statusAtivos);
+
+        // Correção aplicada aqui: Apenas converte para DTO, sem alterar o banco de dados no GET
+        List<PedidoDTO> dtos = pedidos.stream()
+                .map(pedido -> pedidoService.converterParaDTO(pedido))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
+    }
+
+    /**
+     * Detalhes de um pedido específico por ID.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Pedido> getById(@PathVariable Long id) {
+        Pedido pedido = pedidoService.buscarPorId(id);
+        return ResponseEntity.ok(pedido);
+    }
+
+    /**
+     * CONFEITEIRO: Atualiza o status do pedido (Ex: NOVO -> PREPARANDO).
+     */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Pedido> atualizarStatus(
+            @PathVariable Long id,
+            @RequestParam String novoStatus) {
+
+        Pedido atualizado = pedidoService.atualizarStatusViaString(id, novoStatus);
+        return ResponseEntity.ok(atualizado);
+    }
+
+    /**
+     * CONFEITEIRO: Cadastra manualmente um pedido/encomenda recebido por fora (Ex: WhatsApp, Balcão).
+     */
+    @PostMapping("/confeiteiro/{confeiteiroId}")
+    public ResponseEntity<Pedido> criarPedidoManualmente(
+            @PathVariable Long confeiteiroId,
+            @RequestBody Pedido pedido) {
+
+        com.app.confeitaria.docelivery.model.entity.Confeiteiro confeiteiroDono = new com.app.confeitaria.docelivery.model.entity.Confeiteiro();
+        confeiteiroDono.setId(confeiteiroId);
+
+        pedido.setConfeiteiro(confeiteiroDono);
+
+        Pedido novoPedido = pedidoService.realizarPedido(pedido);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoPedido);
+    }
+
+    /**
+     * CLIENTE: Lista o histórico de pedidos que aquele cliente específico fez.
+     */
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<List<PedidoDTO>> getHistoricoCliente(@PathVariable Long clienteId) {
+        List<Pedido> pedidos = pedidoService.buscarPedidosPorCliente(clienteId);
+
+        List<PedidoDTO> dtos = pedidos.stream()
+                .map(pedido -> pedidoService.converterParaDTO(pedido))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
+    }
+}

@@ -1,0 +1,33 @@
+package com.app.confeitaria.docelivery.model.enums;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public enum Permission {
+
+    ADMIN_READ("ADMIN_READ"),
+    ADMIN_UPDATE("ADMIN_UPDATE"),
+    ADMIN_CREATE("ADMIN_CREATE"),
+    ADMIN_DELETE("ADMIN_DELETE"),
+
+    CONFEITEIRO_READ("ADMIN_READ"),
+    CONFEITEIRO_UPDATE("ADMIN_UPDATE"),
+    CONFEITEIRO_CREATE("ADMIN_CREATE"),
+    CONFEITEIRO_DELETE("ADMIN_DELETE"),
+
+    CLIENTE_READ("ADMIN_READ"),
+    CLIENTE_UPDATE("ADMIN_UPDATE"),
+    CLIENTE_CREATE("ADMIN_CREATE"),
+    CLIENTE_DELETE("ADMIN_DELETE"),
+
+    ENTREGADOR_READ("ADMIN_READ"),
+    ENTREGADOR_UPDATE("ADMIN_UPDATE"),
+    ENTREGADOR_CREATE("ADMIN_CREATE"),
+    ENTREGADOR_DELETE("ADMIN_DELETE");
+
+    private final String permission;
+
+
+}
