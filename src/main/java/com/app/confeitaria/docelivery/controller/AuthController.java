@@ -102,10 +102,25 @@ public class AuthController {
             cliente.setEmail((String) dados.get("email"));
             cliente.setTelefone((String) dados.get("telefone"));
             cliente.setApelido((String) dados.get("apelido"));
+            cliente.setCep((String) dados.get("cep"));
+            cliente.setEndereco((String) dados.get("endereco"));
+            cliente.setBairro((String) dados.get("bairro"));
+            cliente.setCidade((String) dados.get("cidade"));
+            cliente.setUf((String) dados.get("uf"));
+
+            if (dados.get("dataNascimento") != null) {
+                cliente.setDataNascimento(
+                        java.time.LocalDate.parse((String) dados.get("dataNascimento"))
+                );
+            }
 
             // Criptografa a senha com segurança
             cliente.setSenha(passwordEncoder.encode((String) dados.get("senha")));
             cliente.setCodStatus(true);
+
+            System.out.println("===== DADOS RECEBIDOS =====");
+            System.out.println(dados);
+            System.out.println("===========================");
 
             // Salva e retorna o objeto persistido
             Cliente clienteSalvo = clienteRepository.save(cliente);

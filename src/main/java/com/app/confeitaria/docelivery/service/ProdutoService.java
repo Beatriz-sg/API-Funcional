@@ -195,4 +195,51 @@ public class ProdutoService {
             throw new IllegalStateException("Não é possível excluir este kit porque ele está vinculado a pedidos antigos. Use a opção desativar.");
         }
     }
+
+    @Transactional
+    public Produto alterarKit(Long id, KitRequestDTO dto, MultipartFile imagem) {
+
+        Produto kit = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Kit não encontrado"));
+
+        kit.setNome(dto.getNome());
+        kit.setDescricao(dto.getDescricao());
+        kit.setPreco(dto.getPreco());
+
+        // Atualiza categoria
+        if (dto.getCategoriaId() != null) {
+            Categoria categoria = categoriaRepository.findById(dto.getCategoriaId())
+                    .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+            kit.setCategoria(categoria);
+        }
+
+        // Limpa itens antigos
+        kit.getItens().clear();
+
+        // Adiciona itens novos
+        if (dto.getItens() != null) {
+
+            for (KitItemRequestDTO itemDto : dto.getItens()) {
+
+                Produto produto = produtoRepository.findById(itemDto.getProdutoId())
+                        .orElseThrow(() ->
+                                new RuntimeException("Produto não encontrado"));
+
+                KitItem kitItem = new KitItem();
+                kitItem.setKit(kit);
+                kitItem.setProduto(produto);
+                kitItem.setQuantidade(itemDto.getQuantidade());
+
+                kit.getItens().add(kitItem);
+            }
+        }
+
+        // Atualiza imagem
+        if (imagem != null && !imagem.isEmpty()) {
+            String nomeImagem = salvarFoto(imagem);
+            kit.setImagemUrl(nomeImagem);
+        }
+
+        return produtoRepository.save(kit);
+    }
 }
