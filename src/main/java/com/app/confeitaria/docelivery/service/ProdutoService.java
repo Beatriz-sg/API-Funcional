@@ -73,8 +73,9 @@ public class ProdutoService {
         kit.setNome(dto.getNome());
         kit.setDescricao(dto.getDescricao());
         kit.setPreco(dto.getPreco());
+        kit.setEstoque(dto.getEstoque());
         kit.setConfeiteiro(confeiteiro);
-        kit.setEstoque(9999);
+        kit.setEstoque(dto.getEstoque());
         kit.setCodStatus(true);
 
         if (dto.getCategoriaId() != null) {

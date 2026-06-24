@@ -216,41 +216,10 @@ import java.util.Map;
             }
         }
 
-        // 8. VITRINE DO CLIENTE
-        @GetMapping
-        public ResponseEntity<List<Produto>> listarVitrineGeralCliente() {
-
-        }
-    }
-
     // 8. VITRINE DO CLIENTE
     @GetMapping
     public ResponseEntity<List<Produto>> listarVitrineGeralCliente() {
         List<Produto> produtos = produtoRepository.findAll();
         return ResponseEntity.ok(produtos);
+       }
     }
-
-
-    @PutMapping(value = "/kit/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> alterarKit(
-            @PathVariable Long id,
-            @RequestPart("kit") KitRequestDTO kitDTO,
-            @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
-
-        try {
-
-            Produto kitAtualizado =
-                    produtoService.alterarKit(id, kitDTO, imagem);
-
-            return ResponseEntity.ok(kitAtualizado);
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
-        }
-    }
-
-}
