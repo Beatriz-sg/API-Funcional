@@ -86,6 +86,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/financeiro/**").hasAnyAuthority("ROLE_CONFEITEIRO", "ROLE_MASTER")
 
                         // 6. ÁREAS ESPECÍFICAS
+                        .requestMatchers("/api/cliente/foto").hasAnyAuthority("ROLE_CLIENTE", "ROLE_MASTER")
                         .requestMatchers("/api/cliente/**", "/api/clientes/**").hasAnyAuthority("ROLE_CLIENTE", "ROLE_MASTER")
                         .requestMatchers("/api/entregador/**").hasAnyAuthority("ROLE_ENTREGADOR", "ROLE_MASTER")
                         .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_MASTER", "ROLE_SUPORTE")

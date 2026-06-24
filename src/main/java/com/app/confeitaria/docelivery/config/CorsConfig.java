@@ -14,25 +14,13 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Origem do seu React
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5175", "http://localhost:5176"));
-
-        // Métodos permitidos
+        // Web (React/Vite) + Mobile (Emulador Android + Expo Go + dispositivo físico)
+        configuration.setAllowedOriginPatterns(java.util.Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-
-        // Cabeçalhos permitidos (Incluindo o x-user-id que causou o erro)
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "Cache-Control",
-                "x-user-id"
-        ));
-
-        // Permitir envio de credenciais (Cookies/Auth Headers)
-        configuration.setAllowCredentials(true);
-
-        // Permite que o Front-end leia cabeçalhos específicos na resposta
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control", "x-user-id"));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        // allowCredentials=false é obrigatório quando usando wildcard pattern
+        configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

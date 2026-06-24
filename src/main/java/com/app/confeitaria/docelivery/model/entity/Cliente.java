@@ -9,12 +9,25 @@ import lombok.NoArgsConstructor;
 @DiscriminatorValue("CLIENTE")
 @Getter
 @Setter
-@NoArgsConstructor // ⬅️ Essencial para o Jackson conseguir dar um "new Cliente()"
+@NoArgsConstructor
 public class Cliente extends Usuario {
 
     @Column(length = 20)
     private String apelido;
 
-    // Se você não usa @SuperBuilder, o Jackson precisa que os campos de Usuário
-    // mapeados na Single Table sejam preenchidos via setters padrão, o que o @NoArgsConstructor já permite!
+    @Column(name = "foto_perfil")
+    private String fotoPerfil;
+
+    @Column(name = "numero_endereco", length = 20)
+    private String numero;
+
+    @Column(length = 100)
+    private String complemento;
+
+    // Lista separada por vírgula — simples, sem tabela extra
+    @Column(name = "preferencias", length = 500)
+    private String preferencias;
+
+    @Column(name = "restricoes", length = 500)
+    private String restricoes;
 }
