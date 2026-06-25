@@ -1,5 +1,6 @@
 package com.app.confeitaria.docelivery.service;
 
+import com.app.confeitaria.docelivery.dto.ItemPedidoDTO;
 import com.app.confeitaria.docelivery.dto.PedidoDTO;
 import com.app.confeitaria.docelivery.model.entity.ItemPedido;
 import com.app.confeitaria.docelivery.model.entity.Pedido;
@@ -65,21 +66,32 @@ public class PedidoService {
     public PedidoDTO converterParaDTO(Pedido pedido) {
         if (pedido == null) return null;
 
-        String nomeDoCliente = (pedido.getCliente() != null) ? pedido.getCliente().getNome() : "Cliente não informado";
+        String nomeDoCliente    = (pedido.getCliente() != null) ? pedido.getCliente().getNome() : "Cliente não informado";
         String telefoneDoCliente = (pedido.getCliente() != null) ? pedido.getCliente().getTelefone() : "";
-        java.math.BigDecimal total = java.math.BigDecimal.valueOf(pedido.getValorPedido());
-
+        java.math.BigDecimal total = java.math.BigDecimal.valueOf(
+                pedido.getValorPedido() != null ? pedido.getValorPedido() : 0.0);
         String statusStr = (pedido.getStatus() != null) ? pedido.getStatus().name() : "NOVO";
+
+        List<ItemPedidoDTO> itensDTO = (pedido.getItens() != null)
+                ? pedido.getItens().stream().map(item -> new ItemPedidoDTO(
+                        item.getProduto() != null ? item.getProduto().getId() : null,
+                        item.getProduto() != null ? item.getProduto().getNome() : "",
+                        item.getQuantidade(),
+                        java.math.BigDecimal.valueOf(item.getPrecoUnitario() != null ? item.getPrecoUnitario() : 0.0)
+                  )).collect(Collectors.toList())
+                : java.util.Collections.emptyList();
 
         return new PedidoDTO(
                 pedido.getId(),
+                pedido.getNumeroPedido(),
                 nomeDoCliente,
                 telefoneDoCliente,
-                "Retirada na Loja / Ver cadastro",
+                pedido.getEnderecoEntrega() != null ? pedido.getEnderecoEntrega() : "",
+                pedido.getFormaPagamento() != null ? pedido.getFormaPagamento() : "",
                 statusStr,
                 total,
                 pedido.getDataHoraPedido(),
-                java.util.Collections.emptyList() // Se precisar enviar itens no front, altere aqui depois
+                itensDTO
         );
     }
 

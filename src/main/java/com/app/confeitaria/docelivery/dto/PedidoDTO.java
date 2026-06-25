@@ -6,10 +6,12 @@ import java.util.List;
 
 public record PedidoDTO(
         Long id,
+        String numeroPedido,
         String nomeCliente,
         String telefoneCliente,
         String enderecoEntrega,
-        String status, // Ex: "NOVO", "PREPARANDO", "SAIU_PARA_ENTREGA"
+        String formaPagamento,
+        String status,
         BigDecimal total,
         LocalDateTime dataCriacao,
         List<ItemPedidoDTO> itens

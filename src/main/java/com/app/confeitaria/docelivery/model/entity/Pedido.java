@@ -33,6 +33,18 @@ public class Pedido {
 
     private LocalDateTime dataEntregaAgendada;
 
+    @Column(name = "endereco_entrega", length = 500)
+    private String enderecoEntrega;
+
+    @Column(name = "forma_pagamento", length = 50)
+    private String formaPagamento;
+
+    @Column(length = 500)
+    private String observacao;
+
+    @Column(length = 50)
+    private String cupom;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private StatusPedido status;
