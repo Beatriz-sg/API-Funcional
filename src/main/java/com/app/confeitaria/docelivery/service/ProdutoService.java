@@ -142,6 +142,17 @@ public class ProdutoService {
         produtoRepository.save(produto);
     }
 
+    // 4.1 ATUALIZAR DISPONIBILIDADE — chamado pelo endpoint PUT /{id}/disponibilidade
+    // Permite tanto ativar (true) quanto desativar (false) via payload {"disponivel": true|false}
+    @Transactional
+    public Produto atualizarDisponibilidade(Long id, Boolean disponivel) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto com ID " + id + " não encontrado."));
+
+        produto.setCodStatus(disponivel); // codStatus é serializado como "disponivel" pelo @JsonProperty
+        return produtoRepository.save(produto);
+    }
+
     // 🌟 5. EXCLUIR PRODUTO (Deleção Física controlada com rollback se já houver vendas)
     @Transactional
     public void excluirFisicamente(Long id) {
@@ -206,6 +217,7 @@ public class ProdutoService {
         kit.setNome(dto.getNome());
         kit.setDescricao(dto.getDescricao());
         kit.setPreco(dto.getPreco());
+        kit.setEstoque(dto.getEstoque()); // persiste o estoque enviado pelo front-end
 
         // Atualiza categoria
         if (dto.getCategoriaId() != null) {
