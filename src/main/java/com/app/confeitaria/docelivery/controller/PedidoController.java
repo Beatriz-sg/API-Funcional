@@ -96,7 +96,19 @@ public class PedidoController {
         List<Pedido> pedidos = pedidoService.buscarPedidosPorCliente(clienteId);
 
         List<PedidoDTO> dtos = pedidos.stream()
-                .map(pedido -> pedidoService.converterParaDTO(pedido))
+                .map(pedido -> {
+                    try {
+                        return pedidoService.converterParaDTO(pedido);
+                    } catch (org.hibernate.LazyInitializationException lie) {
+                        System.err.println("=== LazyInitializationException em converterParaDTO ===");
+                        System.err.println("Pedido ID : " + pedido.getId());
+                        System.err.println("Mensagem  : " + lie.getMessage());
+                        // Imprime o stack trace completo — a linha exata dentro de converterParaDTO aparece aqui
+                        lie.printStackTrace(System.err);
+                        System.err.println("======================================================");
+                        throw lie; // relança para não suprimir o erro
+                    }
+                })
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);

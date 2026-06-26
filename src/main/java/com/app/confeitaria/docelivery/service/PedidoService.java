@@ -116,6 +116,7 @@ public class PedidoService {
 
         // Variável auxiliar para descobrir a loja através dos produtos enviados
         com.app.confeitaria.docelivery.model.entity.Loja lojaDoPedido = null;
+        com.app.confeitaria.docelivery.model.entity.Usuario confeiteiroDoPedido = null;
 
         if (pedido.getItens() != null && !pedido.getItens().isEmpty()) {
             for (ItemPedido item : pedido.getItens()) {
@@ -135,44 +136,62 @@ public class PedidoService {
 
                 produtoRef.setEstoque(produtoRef.getEstoque() - item.getQuantidade());
 
-                // Captura a loja vinculada ao produto se ela existir
+                // Captura o confeiteiro e a loja vinculados ao produto (única fonte confiável)
+                if (confeiteiroDoPedido == null && produtoRef.getConfeiteiro() != null) {
+                    confeiteiroDoPedido = produtoRef.getConfeiteiro();
+                }
                 if (lojaDoPedido == null && produtoRef.getLoja() != null) {
                     lojaDoPedido = produtoRef.getLoja();
                 }
             }
         }
 
-        // 🚀 CORREÇÃO APLICADA (OPÇÃO 2): Interceptação de IDs inválidos de Loja vindos do Front
-        if (pedido.getLoja() != null && pedido.getLoja().getId() != null) {
-            Long idLojaEnviado = pedido.getLoja().getId();
-
-            // Se o ID enviado na Loja for o ID de um Usuário/Confeiteiro (como 10005, 10008)
-            if (idLojaEnviado >= 10000L) {
-                System.out.println("⚠️ Correção ativada: Front-end enviou ID de usuário (" + idLojaEnviado + ") no nó da loja.");
-
-                if (idLojaEnviado == 10005L || idLojaEnviado == 10008L) {
-                    pedido.getLoja().setId(4L); // Força diretamente o ID real da loja física mapeada no seu banco
-                } else {
-                    // Limpa o ID quebrado para o bloco abaixo resolver dinamicamente via query nativa
-                    pedido.setLoja(null);
-                }
-            }
+        // ── RESOLUÇÃO DO CONFEITEIRO ────────────────────────────────────────────────
+        // O confeiteiro nunca é enviado pelo front no fluxo normal de compra.
+        // Deriva-o de forma confiável a partir do produto, que sempre tem confeiteiro_id preenchido.
+        if (pedido.getConfeiteiro() == null && confeiteiroDoPedido != null) {
+            // confeiteiroDoPedido é um Usuario; precisamos de um Confeiteiro para o campo tipado
+            com.app.confeitaria.docelivery.model.entity.Confeiteiro c =
+                    new com.app.confeitaria.docelivery.model.entity.Confeiteiro();
+            c.setId(confeiteiroDoPedido.getId());
+            pedido.setConfeiteiro(c);
         }
 
-        // 🟢 DEFESA ABSOLUTA DE FOREIGN KEY CONTRA O ERRO 547:
-        if (pedido.getLoja() == null || pedido.getLoja().getId() == null) {
-            if (lojaDoPedido != null) {
-                pedido.setLoja(lojaDoPedido);
-            } else {
-                try {
-                    // Executa uma query nativa para capturar o ID real de qualquer primeira loja cadastrada no banco
-                    Number primeiroIdLoja = (Number) entityManager.createNativeQuery("SELECT TOP 1 id FROM loja").getSingleResult();
-                    com.app.confeitaria.docelivery.model.entity.Loja lojaSegura = new com.app.confeitaria.docelivery.model.entity.Loja();
-                    lojaSegura.setId(primeiroIdLoja.longValue());
-                    pedido.setLoja(lojaSegura);
-                } catch (Exception e) {
-                    throw new RuntimeException("Erro impeditivo: Não foi encontrada nenhuma loja no banco de dados para vincular ao pedido.");
+        // ── RESOLUÇÃO DA LOJA ──────────────────────────────────────────────────────
+        // O front envia loja.id com o userId do confeiteiro (ex: 10005) em vez do loja.id real.
+        // A fonte de verdade é o produto — que tem loja_id correto — ou o confeiteiro (que tem loja).
+        // Se o produto não tiver loja vinculada, busca via confeiteiro.
+        if (lojaDoPedido == null && confeiteiroDoPedido != null) {
+            // Tenta carregar o confeiteiro completo (com loja) para obter o loja_id real
+            try {
+                Number idLoja = (Number) entityManager
+                        .createNativeQuery("SELECT loja_id FROM usuario WHERE id = :id")
+                        .setParameter("id", confeiteiroDoPedido.getId())
+                        .getSingleResult();
+                if (idLoja != null) {
+                    com.app.confeitaria.docelivery.model.entity.Loja lojaDoConfeiteiro =
+                            new com.app.confeitaria.docelivery.model.entity.Loja();
+                    lojaDoConfeiteiro.setId(idLoja.longValue());
+                    lojaDoPedido = lojaDoConfeiteiro;
                 }
+            } catch (Exception ignored) { /* sem loja vinculada ao confeiteiro */ }
+        }
+
+        if (lojaDoPedido != null) {
+            pedido.setLoja(lojaDoPedido);
+        } else {
+            // Último recurso: qualquer loja existente no banco
+            try {
+                Number primeiroIdLoja = (Number) entityManager
+                        .createNativeQuery("SELECT TOP 1 id FROM loja")
+                        .getSingleResult();
+                com.app.confeitaria.docelivery.model.entity.Loja lojaSegura =
+                        new com.app.confeitaria.docelivery.model.entity.Loja();
+                lojaSegura.setId(primeiroIdLoja.longValue());
+                pedido.setLoja(lojaSegura);
+            } catch (Exception e) {
+                throw new RuntimeException(
+                        "Erro impeditivo: nenhuma loja encontrada no banco para vincular ao pedido.");
             }
         }
 
@@ -257,7 +276,10 @@ public class PedidoService {
 
     /**
      * CLIENTE: Busca todos os pedidos efetuados por um cliente específico para o histórico.
+     * @Transactional(readOnly = true) mantém a sessão Hibernate aberta durante o mapeamento,
+     * evitando LazyInitializationException ao acessar Pedido.itens.
      */
+    @Transactional(readOnly = true)
     public List<Pedido> buscarPedidosPorCliente(Long clienteId) {
         return pedidoRepository.findByClienteId(clienteId);
     }

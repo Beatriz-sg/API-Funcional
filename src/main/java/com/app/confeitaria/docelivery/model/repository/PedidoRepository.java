@@ -3,6 +3,8 @@ package com.app.confeitaria.docelivery.model.repository;
 import com.app.confeitaria.docelivery.model.entity.Pedido;
 import com.app.confeitaria.docelivery.model.enums.StatusPedido;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -33,5 +35,8 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     List<Pedido> findByStatusAndDataEntregaAgendadaBefore(StatusPedido status, LocalDateTime dataLimite);
 
     // Essa linha precisa estar aqui para o Service funcionar!
-    List<Pedido> findByClienteId(Long clienteId);
+    // JOIN FETCH garante que Pedido.itens seja carregado na mesma query,
+    // evitando LazyInitializationException ao mapear para DTO fora da sessão.
+    @Query("SELECT DISTINCT p FROM Pedido p LEFT JOIN FETCH p.itens i LEFT JOIN FETCH i.produto WHERE p.cliente.id = :clienteId ORDER BY p.dataHoraPedido DESC")
+    List<Pedido> findByClienteId(@Param("clienteId") Long clienteId);
 }

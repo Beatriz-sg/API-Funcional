@@ -66,6 +66,15 @@ public class Produto {
     @JoinColumn(name = "foto_id") // Ou o nome exato da coluna FK na tabela produto, se houver
     private FotoProduto foto;
 
+    /** Indica se o produto/kit está em promoção */
+    @Column(name = "em_oferta", nullable = false)
+    @Builder.Default
+    private Boolean emOferta = false;
+
+    /** Preço promocional — obrigatório quando emOferta = true */
+    @Column(name = "preco_promocional", precision = 10, scale = 2)
+    private java.math.BigDecimal precoPromocional;
+
 
     // 🔴 REMOVIDO: O bloco @ManyToMany antigo (itensDoKit) foi removido
     // para não inflar o banco com tabelas duplicadas desnecessárias.
@@ -75,5 +84,16 @@ public class Produto {
             this.categoria = new Categoria();
             this.categoria.setId(id);
         }
+    }
+
+    /**
+     * Exposes only the baker's ID to JSON consumers (e.g. Mobile carousel).
+     * The full Usuario object remains @JsonIgnore � no circular serialization risk.
+     * Hibernate resolves the FK column value from the already-loaded proxy
+     * without issuing an extra SELECT.
+     */
+    @JsonProperty("confeiteiroId")
+    public Long getConfeiteiroId() {
+        return confeiteiro != null ? confeiteiro.getId() : null;
     }
 }

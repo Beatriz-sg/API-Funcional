@@ -18,13 +18,45 @@ public class PagamentoController {
 
     @PostMapping("/processar")
     public ResponseEntity<?> processar(@RequestBody Map<String, Object> dados) {
-        BigDecimal valor = new BigDecimal(dados.get("valor").toString());
-        String tokenCartao = (String) dados.get("tokenCartao");
-        String email = (String) dados.get("email");
-        String metodo = (String) dados.get("metodo"); // "pix" ou "visa", etc.
+        try {
+            BigDecimal valor = new BigDecimal(dados.get("valor").toString());
+            String tokenCartao = (String) dados.get("tokenCartao");
+            String email      = (String) dados.get("email");
+            String metodo     = (String) dados.get("metodo"); // "pix" ou "visa", etc.
 
-        String status = mercadoPagoService.criarPagamento(valor, tokenCartao, email, metodo);
+            // Lê "parcelas" enviado pelo mobile; usa 1 como fallback seguro se ausente
+            Integer parcelas = (dados.get("parcelas") != null)
+                    ? Integer.parseInt(dados.get("parcelas").toString())
+                    : 1;
 
-        return ResponseEntity.ok(Map.of("status", status));
+            String status = mercadoPagoService.criarPagamento(valor, tokenCartao, email, metodo, parcelas);
+
+            // 🔍 DEBUG: se o serviço retornou uma string de erro, expõe a causa real
+            // TODO: remover o tratamento de debug e restaurar Map.of("status", status) antes de produção
+            if (status != null && status.startsWith("ERRO")) {
+                return ResponseEntity
+                        .status(500)
+                        .body(Map.of(
+                                "status",  "ERRO",
+                                "detalhe", status          // contém tipo + mensagem da exceção
+                        ));
+            }
+
+            return ResponseEntity.ok(Map.of("status", status));
+
+        } catch (Exception e) {
+            // Cobre erros de parsing do payload (ex: "valor" ausente ou nulo)
+            System.err.println("=== ERRO NO CONTROLLER DE PAGAMENTO ===");
+            System.err.println("Tipo     : " + e.getClass().getName());
+            System.err.println("Mensagem : " + e.getMessage());
+            e.printStackTrace(System.err);
+            System.err.println("========================================");
+            return ResponseEntity
+                    .status(500)
+                    .body(Map.of(
+                            "status",  "ERRO",
+                            "detalhe", e.getClass().getSimpleName() + " — " + e.getMessage()
+                    ));
+        }
     }
 }

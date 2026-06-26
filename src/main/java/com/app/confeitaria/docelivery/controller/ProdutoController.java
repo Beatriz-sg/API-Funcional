@@ -54,6 +54,11 @@ public class ProdutoController {
             produto.setConfeiteiro(confeiteiro);
             produto.setCodStatus(true); // Nasce ativo por padrao
 
+            // Campos promocionais
+            produto.setEmOferta(Boolean.TRUE.equals(dto.emOferta()));
+            produto.setPrecoPromocional(
+                    Boolean.TRUE.equals(dto.emOferta()) ? dto.precoPromocional() : null);
+
             System.out.println("===== DEBUG PRODUTO =====");
             System.out.println("Categoria ID recebida: " + dto.categoriaId());
             System.out.println("Nome: " + dto.nome());

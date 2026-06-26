@@ -51,6 +51,11 @@ public class ProdutoService {
 
         produto.setCategoriaId(dto.categoriaId());
 
+        // Campos promocionais — só persistidos se emOferta = true
+        produto.setEmOferta(Boolean.TRUE.equals(dto.emOferta()));
+        produto.setPrecoPromocional(
+                Boolean.TRUE.equals(dto.emOferta()) ? dto.precoPromocional() : null);
+
         if (file != null && !file.isEmpty()) {
             String nomeSalvo = salvarFoto(file);
             produto.setImagemUrl(nomeSalvo);
@@ -77,6 +82,11 @@ public class ProdutoService {
         kit.setConfeiteiro(confeiteiro);
         kit.setEstoque(dto.getEstoque());
         kit.setCodStatus(true);
+
+        // Campos promocionais do kit
+        kit.setEmOferta(Boolean.TRUE.equals(dto.getEmOferta()));
+        kit.setPrecoPromocional(
+                Boolean.TRUE.equals(dto.getEmOferta()) ? dto.getPrecoPromocional() : null);
 
         if (dto.getCategoriaId() != null) {
             Categoria categoria = categoriaRepository.findById(dto.getCategoriaId())
@@ -123,6 +133,11 @@ public class ProdutoService {
 
         // Atualiza a categoria de forma segura (limpa se o DTO mandar null)
         produtoExistente.setCategoriaId(dto.categoriaId());
+
+        // Atualiza campos promocionais
+        produtoExistente.setEmOferta(Boolean.TRUE.equals(dto.emOferta()));
+        produtoExistente.setPrecoPromocional(
+                Boolean.TRUE.equals(dto.emOferta()) ? dto.precoPromocional() : null);
 
         if (file != null && !file.isEmpty()) {
             String nomeSalvo = salvarFoto(file);
@@ -218,6 +233,11 @@ public class ProdutoService {
         kit.setDescricao(dto.getDescricao());
         kit.setPreco(dto.getPreco());
         kit.setEstoque(dto.getEstoque()); // persiste o estoque enviado pelo front-end
+
+        // Atualiza campos promocionais
+        kit.setEmOferta(Boolean.TRUE.equals(dto.getEmOferta()));
+        kit.setPrecoPromocional(
+                Boolean.TRUE.equals(dto.getEmOferta()) ? dto.getPrecoPromocional() : null);
 
         // Atualiza categoria
         if (dto.getCategoriaId() != null) {

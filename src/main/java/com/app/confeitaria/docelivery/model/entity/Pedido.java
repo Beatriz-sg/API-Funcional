@@ -1,6 +1,7 @@
 package com.app.confeitaria.docelivery.model.entity;
 
 import com.app.confeitaria.docelivery.model.enums.StatusPedido;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -58,10 +59,12 @@ public class Pedido {
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
+    @JsonIgnoreProperties({"senha", "password", "authorities", "accountNonExpired", "accountNonLocked", "credentialsNonExpired", "enabled"})
     private Cliente cliente;
 
     @ManyToOne
     @JoinColumn(name = "confeiteiro_id")
+    @JsonIgnoreProperties({"senha", "password", "authorities", "accountNonExpired", "accountNonLocked", "credentialsNonExpired", "enabled", "loja"})
     private Confeiteiro confeiteiro;
 
     @ManyToOne

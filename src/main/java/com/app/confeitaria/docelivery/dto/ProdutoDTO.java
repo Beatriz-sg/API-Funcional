@@ -7,8 +7,10 @@ public record ProdutoDTO(
         String descricao,
         Double preco,
         Integer estoque,
-        Long categoriaId, // ID para buscar a Categoria no banco
-        Boolean disponivel
+        Long categoriaId,
+        Boolean disponivel,
+        Boolean emOferta,
+        BigDecimal precoPromocional
 ) {
-    // Usar record no Java 17+ simplifica o código (gera getters, construtores e equals automaticamente)
+    // emOferta e precoPromocional são opcionais — null é aceito para produtos sem promoção
 }
