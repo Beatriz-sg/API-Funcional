@@ -12,7 +12,7 @@ public record PedidoDTO(
         String enderecoEntrega,
         String formaPagamento,
         String status,
-        BigDecimal total,
+        BigDecimal valorPedido,
         LocalDateTime dataCriacao,
         List<ItemPedidoDTO> itens
 ) {}

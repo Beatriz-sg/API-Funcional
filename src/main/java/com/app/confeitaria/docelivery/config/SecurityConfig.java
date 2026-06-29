@@ -55,6 +55,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/ws-docelivery/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Mobile Delivery App — rotas publicas
+                        .requestMatchers(HttpMethod.POST, "/api/entregadores/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/entregadores").permitAll()
+                        // Mobile Delivery App — rotas autenticadas
+                        .requestMatchers(HttpMethod.GET, "/api/entregadores/perfil").authenticated()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/imagens/**").permitAll()
 

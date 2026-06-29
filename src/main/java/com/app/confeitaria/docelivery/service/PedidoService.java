@@ -208,6 +208,7 @@ public class PedidoService {
         return pedidoSalvo;
     }
 
+    @Transactional(readOnly = true)
     public List<Pedido> buscarFilaConfeiteiro(Long confeiteiroId, List<String> status) {
         List<StatusPedido> statusEnums = status.stream()
                 .map(s -> StatusPedido.valueOf(s.toUpperCase()))
@@ -282,5 +283,13 @@ public class PedidoService {
     @Transactional(readOnly = true)
     public List<Pedido> buscarPedidosPorCliente(Long clienteId) {
         return pedidoRepository.findByClienteId(clienteId);
+    }
+
+    /**
+     * CONFEITEIRO: Histórico completo — todos os status, ordenado por data desc.
+     */
+    @Transactional(readOnly = true)
+    public List<Pedido> buscarTodosPedidosConfeiteiro(Long confeiteiroId) {
+        return pedidoRepository.findByConfeiteiroIdOrderByDataHoraPedidoDesc(confeiteiroId);
     }
 }

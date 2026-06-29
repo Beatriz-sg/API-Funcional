@@ -40,6 +40,9 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private String senha;
 
+    @Column(name = "foto_perfil")
+    private String fotoPerfil;
+
     private LocalDate dataNascimento;
 
     // 🔴 REMOVIDO: O campo 'private Loja loja' saiu daqui.

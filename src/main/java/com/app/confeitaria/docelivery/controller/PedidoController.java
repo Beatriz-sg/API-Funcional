@@ -34,14 +34,13 @@ public class PedidoController {
 
     /**
      * CONFEITEIRO: Lista pedidos ativos (Fila de Trabalho).
-     * CORRIGIDO: Removida a chamada de atualização de status e utilizada apenas a conversão para DTO limpo.
+     * Inclui NOVO, AGENDADO, PREPARANDO e SAIU_PARA_ENTREGA.
      */
     @GetMapping("/confeiteiro/{id}/fila")
     public ResponseEntity<List<PedidoDTO>> getFilaTrabalho(@PathVariable Long id) {
-        List<String> statusAtivos = Arrays.asList("NOVO", "PREPARANDO");
+        List<String> statusAtivos = Arrays.asList("NOVO", "AGENDADO", "PREPARANDO", "SAIU_PARA_ENTREGA");
         List<Pedido> pedidos = pedidoService.buscarFilaConfeiteiro(id, statusAtivos);
 
-        // Correção aplicada aqui: Apenas converte para DTO, sem alterar o banco de dados no GET
         List<PedidoDTO> dtos = pedidos.stream()
                 .map(pedido -> pedidoService.converterParaDTO(pedido))
                 .collect(Collectors.toList());
@@ -89,11 +88,23 @@ public class PedidoController {
     }
 
     /**
+     * CONFEITEIRO: Histórico completo de todos os pedidos (todos os status).
+     * Usado pelo painel web e pelo orderService.getTodosPedidos().
+     */
+    @GetMapping("/confeiteiro/{id}/historico")
+    public ResponseEntity<List<PedidoDTO>> getHistoricoConfeiteiro(@PathVariable Long id) {
+        List<Pedido> pedidos = pedidoService.buscarTodosPedidosConfeiteiro(id);
+        List<PedidoDTO> dtos = pedidos.stream()
+                .map(pedido -> pedidoService.converterParaDTO(pedido))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    /**
      * CLIENTE: Lista o histórico de pedidos que aquele cliente específico fez.
      */
     @GetMapping("/cliente/{clienteId}")
-    public ResponseEntity<List<PedidoDTO>> getHistoricoCliente(@PathVariable Long clienteId) {
-        List<Pedido> pedidos = pedidoService.buscarPedidosPorCliente(clienteId);
+    public ResponseEntity<List<PedidoDTO>> getHistoricoCliente(@PathVariable Long clienteId) {        List<Pedido> pedidos = pedidoService.buscarPedidosPorCliente(clienteId);
 
         List<PedidoDTO> dtos = pedidos.stream()
                 .map(pedido -> {
