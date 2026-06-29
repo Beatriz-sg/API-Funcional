@@ -98,7 +98,11 @@ public class AuthController {
 
             // Extrai e valida os dados manualmente, evitando nós cegos no Jackson
             cliente.setNome((String) dados.get("nome"));
-            cliente.setCpf((String) dados.get("cpf"));
+            String cpfCliente = (String) dados.get("cpf");
+            if (!com.app.confeitaria.docelivery.util.CpfValidator.isValid(cpfCliente)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "CPF inválido."));
+            }
+            cliente.setCpf(cpfCliente);
             cliente.setEmail((String) dados.get("email"));
             cliente.setTelefone((String) dados.get("telefone"));
             cliente.setApelido((String) dados.get("apelido"));
@@ -174,6 +178,8 @@ public class AuthController {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(confeiteiroSalvo);
 
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("error", "Erro interno no cadastro: " + e.getMessage()));

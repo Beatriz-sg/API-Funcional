@@ -34,6 +34,9 @@ public class UsuarioService {
 
     @Transactional
     public Confeiteiro salvarConfeiteiro(Confeiteiro confeiteiro) {
+        if (!com.app.confeitaria.docelivery.util.CpfValidator.isValid(confeiteiro.getCpf())) {
+            throw new IllegalArgumentException("CPF inválido.");
+        }
         if (usuarioRepository.existsByCpf(confeiteiro.getCpf())) {
             throw new RuntimeException("CPF já cadastrado no sistema!");
         }

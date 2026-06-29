@@ -127,6 +127,10 @@ public class EntregadorAuthController {
                         .body(Map.of("message", "E-mail ja cadastrado."));
             }
 
+            if (!com.app.confeitaria.docelivery.util.CpfValidator.isValid(dto.cpf())) {
+                return ResponseEntity.badRequest().body(Map.of("message", "CPF inválido."));
+            }
+
             Entregador e = new Entregador();
             e.setNome(dto.nome());
             e.setEmail(dto.email());

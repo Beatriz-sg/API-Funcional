@@ -167,18 +167,27 @@ public class ClienteController {
     @PutMapping("/atualizar/{id}")
     @Transactional
     public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody Cliente dados) {
-        return clienteRepository.findById(id).map(c -> {
-            if (dados.getNome() != null)      c.setNome(dados.getNome());
-            if (dados.getTelefone() != null)  c.setTelefone(dados.getTelefone());
-            if (dados.getEmail() != null)     c.setEmail(dados.getEmail());
-            if (dados.getCpf() != null)       c.setCpf(dados.getCpf());
-            if (dados.getCep() != null)       c.setCep(dados.getCep());
-            if (dados.getEndereco() != null)  c.setEndereco(dados.getEndereco());
-            if (dados.getBairro() != null)    c.setBairro(dados.getBairro());
-            if (dados.getCidade() != null)    c.setCidade(dados.getCidade());
-            if (dados.getUf() != null)        c.setUf(dados.getUf());
-            if (dados.getApelido() != null)   c.setApelido(dados.getApelido());
-            return ResponseEntity.ok(clienteRepository.save(c));
-        }).orElse(ResponseEntity.notFound().build());
+        try {
+            return clienteRepository.findById(id).map(c -> {
+                if (dados.getNome() != null)      c.setNome(dados.getNome());
+                if (dados.getTelefone() != null)  c.setTelefone(dados.getTelefone());
+                if (dados.getEmail() != null)     c.setEmail(dados.getEmail());
+                if (dados.getCpf() != null) {
+                    if (!com.app.confeitaria.docelivery.util.CpfValidator.isValid(dados.getCpf())) {
+                        throw new IllegalArgumentException("CPF inválido.");
+                    }
+                    c.setCpf(dados.getCpf());
+                }
+                if (dados.getCep() != null)       c.setCep(dados.getCep());
+                if (dados.getEndereco() != null)  c.setEndereco(dados.getEndereco());
+                if (dados.getBairro() != null)    c.setBairro(dados.getBairro());
+                if (dados.getCidade() != null)    c.setCidade(dados.getCidade());
+                if (dados.getUf() != null)        c.setUf(dados.getUf());
+                if (dados.getApelido() != null)   c.setApelido(dados.getApelido());
+                return ResponseEntity.ok(clienteRepository.save(c));
+            }).orElse(ResponseEntity.notFound().build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }

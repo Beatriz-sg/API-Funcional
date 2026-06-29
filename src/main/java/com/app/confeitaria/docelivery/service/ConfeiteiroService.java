@@ -75,7 +75,12 @@ public class ConfeiteiroService {
 
         if (dadosAtualizados.getNome() != null) confeiteiro.setNome(dadosAtualizados.getNome());
         if (dadosAtualizados.getTelefone() != null) confeiteiro.setTelefone(dadosAtualizados.getTelefone());
-        if (dadosAtualizados.getCpf() != null) confeiteiro.setCpf(dadosAtualizados.getCpf());
+        if (dadosAtualizados.getCpf() != null) {
+            if (!com.app.confeitaria.docelivery.util.CpfValidator.isValid(dadosAtualizados.getCpf())) {
+                throw new IllegalArgumentException("CPF inválido.");
+            }
+            confeiteiro.setCpf(dadosAtualizados.getCpf());
+        }
         if (dadosAtualizados.getCep() != null) confeiteiro.setCep(dadosAtualizados.getCep());
         if (dadosAtualizados.getEndereco() != null) confeiteiro.setEndereco(dadosAtualizados.getEndereco());
         if (dadosAtualizados.getBairro() != null) confeiteiro.setBairro(dadosAtualizados.getBairro());
