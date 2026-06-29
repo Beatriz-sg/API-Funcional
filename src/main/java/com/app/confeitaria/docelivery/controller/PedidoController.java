@@ -34,11 +34,12 @@ public class PedidoController {
 
     /**
      * CONFEITEIRO: Lista pedidos ativos (Fila de Trabalho).
-     * Inclui NOVO, AGENDADO, PREPARANDO e SAIU_PARA_ENTREGA.
+     * Inclui NOVO, AGENDADO, PREPARANDO, SAIU_PARA_ENTREGA e PRONTO_PARA_RETIRADA.
      */
     @GetMapping("/confeiteiro/{id}/fila")
     public ResponseEntity<List<PedidoDTO>> getFilaTrabalho(@PathVariable Long id) {
-        List<String> statusAtivos = Arrays.asList("NOVO", "AGENDADO", "PREPARANDO", "SAIU_PARA_ENTREGA");
+        List<String> statusAtivos = Arrays.asList(
+                "NOVO", "AGENDADO", "PREPARANDO", "SAIU_PARA_ENTREGA", "PRONTO_PARA_RETIRADA");
         List<Pedido> pedidos = pedidoService.buscarFilaConfeiteiro(id, statusAtivos);
 
         List<PedidoDTO> dtos = pedidos.stream()

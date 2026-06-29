@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.app.confeitaria.docelivery.model.enums.TipoEntrega;
 
 @Entity
 @Table(name = "pedido")
@@ -39,6 +40,10 @@ public class Pedido {
 
     @Column(name = "forma_pagamento", length = 50)
     private String formaPagamento;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_entrega", nullable = false)
+    private TipoEntrega tipoEntrega;
 
     @Column(length = 500)
     private String observacao;

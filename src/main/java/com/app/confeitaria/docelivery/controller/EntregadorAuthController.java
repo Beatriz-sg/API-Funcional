@@ -330,14 +330,12 @@ public class EntregadorAuthController {
                     entregadorRepository.findById(usuario.getId())
                             .orElseThrow(() -> new RuntimeException("Entregador nao encontrado."));
 
+            // Associa o entregador — status permanece SAIU_PARA_ENTREGA
             pedido.setEntregador(entregador);
-            pedidoRepository.save(pedido);
+            com.app.confeitaria.docelivery.model.entity.Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
-            // Delega a mudanca de status ao PedidoService (reutiliza logica existente)
-            // ENTREGUE = pedido aceito pelo entregador e em rota de entrega
-            com.app.confeitaria.docelivery.dto.PedidoDTO dto =
-                    pedidoService.atualizarStatus(pedidoId, StatusPedido.ENTREGUE);
-
+            // Retorna o DTO sem alterar o status
+            com.app.confeitaria.docelivery.dto.PedidoDTO dto = pedidoService.converterParaDTO(pedidoSalvo);
             return ResponseEntity.ok(dto);
 
         } catch (RuntimeException ex) {
@@ -347,6 +345,70 @@ public class EntregadorAuthController {
             ex.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Erro ao aceitar entrega: " + ex.getMessage()));
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // GET /api/entregadores/pedidos/minhas
+    //
+    // Retorna os pedidos aceitos pelo entregador autenticado
+    // com status SAIU_PARA_ENTREGA (em rota, ainda nao finalizados).
+    // -----------------------------------------------------------------------
+    @org.springframework.web.bind.annotation.GetMapping("/pedidos/minhas")
+    public ResponseEntity<?> minhasEntregas(
+            @AuthenticationPrincipal com.app.confeitaria.docelivery.model.entity.Usuario usuario) {
+
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Token invalido ou ausente."));
+        }
+
+        try {
+            List<com.app.confeitaria.docelivery.model.entity.Pedido> pedidos =
+                    pedidoRepository.findByEntregadorIdAndStatusWithItens(
+                            usuario.getId(), StatusPedido.SAIU_PARA_ENTREGA);
+
+            List<com.app.confeitaria.docelivery.dto.PedidoDTO> dtos = pedidos.stream()
+                    .map(p -> pedidoService.converterParaDTO(p))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(dtos);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erro ao buscar suas entregas: " + ex.getMessage()));
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // POST /api/entregadores/pedidos/{pedidoId}/finalizar
+    //
+    // Entregador finaliza a entrega:
+    //   - Muda status para ENTREGUE
+    //   - Reutiliza PedidoService.atualizarStatus() (financeiro + WebSocket)
+    //   - Notifica Cliente e Confeiteiro via WebSocket
+    // -----------------------------------------------------------------------
+    @org.springframework.web.bind.annotation.PostMapping("/pedidos/{pedidoId}/finalizar")
+    public ResponseEntity<?> finalizarEntrega(
+            @org.springframework.web.bind.annotation.PathVariable Long pedidoId,
+            @AuthenticationPrincipal com.app.confeitaria.docelivery.model.entity.Usuario usuario) {
+
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Token invalido ou ausente."));
+        }
+
+        try {
+            com.app.confeitaria.docelivery.dto.PedidoDTO dto =
+                    pedidoService.atualizarStatus(pedidoId, StatusPedido.ENTREGUE);
+            return ResponseEntity.ok(dto);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", ex.getMessage()));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erro ao finalizar entrega: " + ex.getMessage()));
         }
     }
 }

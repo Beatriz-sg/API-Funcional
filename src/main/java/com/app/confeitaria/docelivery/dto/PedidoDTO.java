@@ -11,6 +11,7 @@ public record PedidoDTO(
         String telefoneCliente,
         String enderecoEntrega,
         String formaPagamento,
+        String tipoEntrega,
         String status,
         BigDecimal valorPedido,
         LocalDateTime dataCriacao,

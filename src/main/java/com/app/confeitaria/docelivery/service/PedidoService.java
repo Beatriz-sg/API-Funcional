@@ -88,6 +88,7 @@ public class PedidoService {
                 telefoneDoCliente,
                 pedido.getEnderecoEntrega() != null ? pedido.getEnderecoEntrega() : "",
                 pedido.getFormaPagamento() != null ? pedido.getFormaPagamento() : "",
+                pedido.getTipoEntrega() != null ? pedido.getTipoEntrega().name() : "ENTREGA",
                 statusStr,
                 total,
                 pedido.getDataHoraPedido(),
@@ -100,6 +101,10 @@ public class PedidoService {
         String codigoUnico = UUID.randomUUID().toString().substring(0, 5).toUpperCase();
         pedido.setNumeroPedido("DOCE-" + codigoUnico);
         pedido.setDataHoraPedido(LocalDateTime.now());
+
+        if (pedido.getTipoEntrega() == null) {
+            pedido.setTipoEntrega(com.app.confeitaria.docelivery.model.enums.TipoEntrega.ENTREGA);
+        }
 
         if (pedido.getAgendado() != null && pedido.getAgendado()) {
             pedido.setStatus(StatusPedido.AGENDADO); // Simplificado para usar direto o Enum
@@ -226,6 +231,14 @@ public class PedidoService {
     public Pedido atualizarStatusViaString(Long id, String novoStatus) {
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado com o ID: " + id));
+
+        // Regra de negócio para pedidos de retirada:
+        // se o confeiteiro enviar SAIU_PARA_ENTREGA para um pedido RETIRADA,
+        // redireciona silenciosamente para PRONTO_PARA_RETIRADA em vez de lançar erro.
+        if ("SAIU_PARA_ENTREGA".equalsIgnoreCase(novoStatus)
+                && pedido.getTipoEntrega() == com.app.confeitaria.docelivery.model.enums.TipoEntrega.RETIRADA) {
+            novoStatus = "PRONTO_PARA_RETIRADA";
+        }
 
         String statusMaiusculo = novoStatus.toUpperCase();
         pedido.setStatus(StatusPedido.valueOf(statusMaiusculo));

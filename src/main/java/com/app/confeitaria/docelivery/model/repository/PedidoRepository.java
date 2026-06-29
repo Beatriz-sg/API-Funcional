@@ -17,11 +17,12 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     List<Pedido> findByConfeiteiroIdOrderByDataHoraPedidoDesc(Long confeiteiroId);
 
     // Busca pedidos pendentes ou em preparação para o Confeiteiro (Fila de Trabalho)
-    // JOIN FETCH carrega Pedido.itens e o produto de cada item na mesma query,
+    // JOIN FETCH carrega Pedido.itens, o produto de cada item e o cliente na mesma query,
     // evitando LazyInitializationException ao converter para DTO fora da sessão.
     @Query("SELECT DISTINCT p FROM Pedido p "
          + "LEFT JOIN FETCH p.itens i "
          + "LEFT JOIN FETCH i.produto "
+         + "LEFT JOIN FETCH p.cliente "
          + "WHERE p.confeiteiro.id = :confeiteiroId "
          + "AND p.status IN :status "
          + "ORDER BY p.dataHoraPedido ASC")
@@ -44,9 +45,14 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     // Ele busca TODOS os pedidos globais que são do tipo AGENDADO e que a data limite já chegou
     List<Pedido> findByStatusAndDataEntregaAgendadaBefore(StatusPedido status, LocalDateTime dataLimite);
 
-    // Busca todos os pedidos com um status especifico (usado pelo endpoint do Entregador)
-    @Query("SELECT DISTINCT p FROM Pedido p LEFT JOIN FETCH p.itens i LEFT JOIN FETCH i.produto WHERE p.status = :status ORDER BY p.dataHoraPedido DESC")
+    // Busca pedidos disponíveis: status = SAIU_PARA_ENTREGA E entregador_id IS NULL
+    // (Após um entregador aceitar, o pedido sai desta lista automaticamente)
+    @Query("SELECT DISTINCT p FROM Pedido p LEFT JOIN FETCH p.itens i LEFT JOIN FETCH i.produto WHERE p.status = :status AND p.entregador IS NULL ORDER BY p.dataHoraPedido DESC")
     List<Pedido> findByStatusWithItens(@Param("status") StatusPedido status);
+
+    // Busca pedidos aceitos pelo entregador autenticado com status SAIU_PARA_ENTREGA
+    @Query("SELECT DISTINCT p FROM Pedido p LEFT JOIN FETCH p.itens i LEFT JOIN FETCH i.produto WHERE p.entregador.id = :entregadorId AND p.status = :status ORDER BY p.dataHoraPedido DESC")
+    List<Pedido> findByEntregadorIdAndStatusWithItens(@Param("entregadorId") Long entregadorId, @Param("status") StatusPedido status);
 
     // Essa linha precisa estar aqui para o Service funcionar!
     // JOIN FETCH garante que Pedido.itens seja carregado na mesma query,

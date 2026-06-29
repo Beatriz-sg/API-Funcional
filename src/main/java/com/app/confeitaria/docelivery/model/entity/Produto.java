@@ -85,13 +85,7 @@ public class Produto {
             this.categoria.setId(id);
         }
     }
-
-    /**
-     * Exposes only the baker's ID to JSON consumers (e.g. Mobile carousel).
-     * The full Usuario object remains @JsonIgnore — no circular serialization risk.
-     * Hibernate resolves the FK column value from the already-loaded proxy
-     * without issuing an extra SELECT.
-     */
+    
     @JsonProperty("confeiteiroId")
     public Long getConfeiteiroId() {
         return confeiteiro != null ? confeiteiro.getId() : null;
